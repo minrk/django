@@ -9,6 +9,8 @@ class Command(NoArgsCommand):
     option_list = NoArgsCommand.option_list + (
         make_option('--plain', action='store_true', dest='plain',
             help='Tells Django to use plain Python, not IPython or bpython.'),
+        make_option('--kernel', action='store_true', dest='ipkernel',
+            help='Tells Django to launch an IPython Kernel (for use with vim-ipython, qtconsole, etc.)'),
         make_option('-i', '--interface', action='store', type='choice', choices=shells,
                     dest='interface',
             help='Specify an interactive interpreter interface. Available options: "ipython" and "bpython"'),
@@ -16,6 +18,12 @@ class Command(NoArgsCommand):
     )
     help = "Runs a Python interactive interpreter. Tries to use IPython or bpython, if one of them is available."
     requires_model_validation = False
+    
+    def ipython_kernel(self):
+        from IPython.zmq.ipkernel import IPKernelApp
+        app = IPKernelApp.instance()
+        app.initialize([])
+        app.start()
 
     def ipython(self):
         try:
@@ -55,6 +63,9 @@ class Command(NoArgsCommand):
 
         use_plain = options.get('plain', False)
         interface = options.get('interface', None)
+        ipkernel = options.get('ipkernel', None)
+        if ipkernel:
+            return self.ipython_kernel()
 
         try:
             if use_plain:
